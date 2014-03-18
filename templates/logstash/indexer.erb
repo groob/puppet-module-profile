@@ -1,19 +1,14 @@
 input {
-  redis {
-    host => "127.0.0.1"
-# these settings should match the output of the agent
-      data_type => "list"
-      key => "logstash"
-
-# We use the 'json' codec here because we expect to read
-# json events from redis.
-      codec => json
-      tags => ["redis_input" ]
-  }
-  file {
-    path => [ "/var/log/meraki_ap_stats.log"]
-      tags => ["meraki", "snmp" ]
-  }
+#  redis {
+#    host => "127.0.0.1"
+#      data_type => "list"
+#      key => "logstash"
+#
+## We use the 'json' codec here because we expect to read
+## json events from redis.
+#      codec => json
+#      tags => ["redis_input" ]
+#  }
   syslog {
     codec => plain { charset => "CP1252" }
     tags => ["meraki", "syslog"]
@@ -51,16 +46,16 @@ filter {
   }
 }
 
-output {
-  if "redis_input" in [tags] {
-    elasticsearch {
-      host => "elasticsearch"
-    }
-  } else {
-    redis { host => "127.0.0.1" data_type => "list" key => "logstash" }
-    stdout {
-      codec  => rubydebug
-    }
-
-  }
-}
+#output {
+#  if "redis_input" in [tags] {
+#    elasticsearch {
+#      host => "elasticsearch"
+#    }
+#  } else {
+#    redis { host => "127.0.0.1" data_type => "list" key => "logstash" }
+#    stdout {
+#      codec  => rubydebug
+#    }
+#
+#  }
+#}
