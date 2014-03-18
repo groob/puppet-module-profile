@@ -3,7 +3,7 @@
 #
 class profile::logstash {
   include ::java
-  ensure_packages('wget')
+  ensure_packages(['wget'])
   class { '::logstash':
     package_url =>  'http://download.elasticsearch.org/logstash/logstash/packages/centos/logstash-1.3.3-1_centos.noarch.rpm'
   }
