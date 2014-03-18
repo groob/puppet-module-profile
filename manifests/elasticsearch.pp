@@ -2,6 +2,8 @@
 #
 class profile::elasticsearch {
 
-  class { '::elasticsearch': }
-  class { '::elasticsearch::repo': }
+  class { '::elasticsearch':
+    manage_repo  => true,
+    repo_version => '1.0',
+  }
 }
