@@ -2,6 +2,6 @@
 #
 class profile::elasticsearch {
 
-  class { '::elasticsearch':
-  }
+  class { '::elasticsearch': }
+  class { '::elasticsearch::repo': }
 }
