@@ -1,0 +1,66 @@
+input {
+  redis {
+    host => "127.0.0.1"
+# these settings should match the output of the agent
+      data_type => "list"
+      key => "logstash"
+
+# We use the 'json' codec here because we expect to read
+# json events from redis.
+      codec => json
+      tags => ["redis_input" ]
+  }
+  file {
+    path => [ "/var/log/meraki_ap_stats.log"]
+      tags => ["meraki", "snmp" ]
+  }
+  syslog {
+    codec => plain { charset => "CP1252" }
+    tags => ["meraki", "syslog"]
+      port => 5514
+  }
+}
+filter {
+  if "redis_input" not in [tags] {
+    if "meraki" in [tags] {
+      if "syslog" in [tags] {
+        grok {
+          match => { "message" => "<134>1 0.0 %{WORD:meraki_device} %{WORD:event_type} allow(:? src=%{IP:src_ip} dst=%{IP:dst_ip} mac=%{MAC:mac} protocol=%{WORD:protocol} sport=(?<src_port>[\d+]+) dport=(?<dst_port>[\d+]+))?" }
+          match => { "message" => "<134>1 0.0 %{WORD:meraki_device} %{WORD:event_type} src=%{IP:src_ip}:(?<src_port>[\d+]+) dst=%{IP:dst_ip}:(?<dst_port>[\d+]+) mac=%{MAC:mac} request: %{WORD:request_type} %{URIPROTO:http}://%{URIHOST:url}" }
+          match => { "message" => "<134>1 0.0 %{WORD:meraki_device} %{WORD:event_type} type=%{WORD:meraki_wap_event}(:? packet='%{WORD:MR_packet}' device='%{MAC:mac}')? radio='%{NUMBER:MR_radio}' state='%{WORD:MR_state}' alarm_id='%{NUMBER:MR_alarm_id}'(:? reason='%{WORD:MR_event_reason}')?(:? dos_count='%{NUMBER:MR_dos_cout}' inter_arrival='%{NUMBER:MR_inter_arrival}')?" }
+          match => { "message" => "<134>1 0.0 %{WORD:meraki_device} %{WORD:event_type} type=%{WORD:meraki_wap_event} radio='%{NUMBER:MR_radio}' vap='%{NUMBER:MR_vap}'(:? channel='%{NUMBER:MR_channel}')?(:? rssi='%{NUMBER:rssi}')?(:? reason='%{WORD:MR_event_reason}' instigator='%{NUMBER:MR_instigator}' duration='%{NUMBER}')?(:? auth_neg_failed='%{NUMBER:auth_neg_failed}')?(:? auth_neg_dur='%{NUMBER:MR_aut
+            h_neg_dur}' last_auth_ago='%{NUMBER:last_auth_ago}' is_wpa='%{NUMBER:is_wpa}')?(:? full_conn='%{NUMBER:full_conn}' ip_resp='%{NUMBER:ip_resp}' ip_src='%{IP:ip_src}')?(:? http_resp='%{NUMBER:http_resp}')?(:? arp_resp='%{NUMBER:arp_resp}')?(:? arp_src='%{IP:arp_src}')?(:? dns_server='%{IP:dns_server}')?(:? dns_req_rtt='%{NUMBER:dns_req_rtt}' dns_resp='%{NUMBER:dns_resp}')?(:? dhcp_lease_completed='%{NUMBER:dhcp_lease_completed}' dhcp_ip='%{IP:dhcp_ip}' dhcp_server='%{IPORHOST:dhcp_server}' dhcp_server_mac='%{MAC:dhcp_server_mac}' dhcp_resp='%{NUMBER:dhcp_resp}')? aid='%{NUMBER:MR_aid}'" }
+          add_tag => [ "grokked", "%{meraki_device}", "meraki", "%{event_type}"]
+            remove_tag => [ "_grokparsefailure" ]
+        }
+      } else if "snmp" in [tags] {
+        grok {
+          patterns_dir  => "/etc/logstash/patterns"
+            match => { "message" => "%{T_ISO_TIMESTAMP:timestamp} %{DATA:meraki_device}(:? %{WORD:interface})? %{WORD:meraki_mib}=%{NUMBER:bytes:int}" }
+          add_tag => ["has_time", "%{meraki_device}", "metric", "grokked"]
+        }
+        if "has_time" in [tags] {
+          date {
+            match => [ "timestamp", "YYYY-MM-dd HH:mm:ss Z" ]
+              add_tag => ["dated"]
+              remove_tag => ["has_time"]
+          }
+        }
+      }
+    }
+  }
+}
+
+output {
+  if "redis_input" in [tags] {
+    elasticsearch {
+      host => "elasticsearch"
+    }
+  } else {
+    redis { host => "127.0.0.1" data_type => "list" key => "logstash" }
+    stdout {
+      codec  => rubydebug
+    }
+
+  }
+}
