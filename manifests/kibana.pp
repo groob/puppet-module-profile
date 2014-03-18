@@ -2,5 +2,6 @@
 #
 class profile::kibana {
   class {'::kibana': }
+  class {'::apache': }
 }
 
