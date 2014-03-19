@@ -20,5 +20,10 @@ class profile::firewall::pre {
     state   => ['RELATED', 'ESTABLISHED'],
     action  => 'accept',
   }
+  firewall { '003 nat accept trusted':
+    source => hiera('trusted_network'),
+    proto  => 'all',
+    action => 'accept',
+  }
 
 }
