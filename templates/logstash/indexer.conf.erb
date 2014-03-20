@@ -9,14 +9,14 @@ input {
 #      codec => json
 #      tags => ["redis_input" ]
 #  }
-  syslog {
+
+syslog {
     codec => plain { charset => "CP1252" }
     tags => ["meraki", "syslog"]
       port => 5514
   }
 }
 filter {
-  if "redis_input" not in [tags] {
     if "meraki" in [tags] {
       if "syslog" in [tags] {
         grok {
@@ -43,9 +43,13 @@ filter {
         }
       }
     }
-  }
 }
 
+output {
+  elasticsearch {
+    host => "localhost",
+  }
+}
 #output {
 #  if "redis_input" in [tags] {
 #    elasticsearch {

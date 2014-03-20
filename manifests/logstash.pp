@@ -9,7 +9,7 @@ class profile::logstash {
     init_defaults_file => 'puppet:///modules/profile/logstash/init_defaults_file',
   }
   logstash::configfile {'indexer':
-    content => template('profile/logstash/indexer.erb'),
+    content => template('profile/logstash/indexer.conf.erb'),
   }
   logstash::patternfile { 'extra_pattern':
     source => 'puppet:///modules/profile/logstash/extra_pattern'
