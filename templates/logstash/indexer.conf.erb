@@ -46,10 +46,9 @@ filter {
 }
 
 output {
-  elasticsearch {
+  elasticsearch_http {
     host => "127.0.0.1"
-    embedded => false
-    cluster => "logstashCluster"
+    #cluster => "logstashCluster"
   }
 }
 #output {
