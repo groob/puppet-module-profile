@@ -47,7 +47,9 @@ filter {
 
 output {
   elasticsearch {
-    host => "localhost"
+    host => "127.0.0.1"
+    embeded => false
+    cluster => "logstashCluster"
   }
 }
 #output {
