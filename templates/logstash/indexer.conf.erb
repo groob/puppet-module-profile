@@ -12,7 +12,7 @@ input {
 
 syslog {
     codec => plain { charset => "CP1252" }
-    tags => ["syslog"]
+    tags => ["meraki", "syslog"]
       port => 5514
   }
 }
